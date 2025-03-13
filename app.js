@@ -1,18 +1,22 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-
+require('dotenv').config();
 const mongoose = require("mongoose");
+const express = require('express');
+const createError = require('http-errors');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 
+const app = express();
 
-var app = express();
+// Kết nối MongoDB (ĐÃ SỬA LỖI)
+mongoose.connect('mongodb+srv://Libraaa:2692005@cluster0.olub1.mongodb.net/React2')
+.then(() => console.log("✅ Kết nối thành công MongoDB"))
+.catch(err => console.log("❌ Lỗi kết nối MongoDB:", err));
 
-// view engine setup
+// Cấu hình view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
@@ -22,31 +26,22 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-
+// Routes
 app.use('/users', userRoutes);
 app.use('/products', productRoutes);
 
-mongoose.connect('mongodb+srv://Libraaa:2692005@cluster0.olub1.mongodb.net//React2')
-.then(() => {console.log("✅ Kết nối thành công MongoDB");})
-.catch(err => console.log("❌ Lỗi kết nối MongoDB:", err));
-
-
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+// Xử lý lỗi 404
+app.use((req, res, next) => {
+    next(createError(404));
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+// Xử lý lỗi server
+app.use((err, req, res, next) => {
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+    res.status(err.status || 500);
+    res.render('error');
 });
 
 module.exports = app;
