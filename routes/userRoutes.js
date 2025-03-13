@@ -47,14 +47,18 @@ router.post('/login', async function (req, res) {
     }
 });
 
-// API lấy danh sách user (yêu cầu token)
-router.get('/users', authenticateToken, async (req, res) => {
+// API lấy thông tin user từ token
+router.get('/me', authenticateToken, async (req, res) => {
     try {
-        const users = await userModel.find().select("-password");
-        res.json(users);
+        const user = await userModel.findById(req.user.id).select("-password"); // Lấy user theo id từ token
+        if (!user) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng!" });
+        }
+        res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 module.exports = router;
