@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
 
 const userSchema = new mongoose.Schema({
-    _id: {
-        type: String,
-        default: uuidv4
-    },
     fullName: {
         type: String,
         required: true,
@@ -35,5 +30,4 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.models.user || mongoose.model('user', userSchema);
-
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
