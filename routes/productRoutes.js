@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/productModel'); // Kiểm tra lại đường dẫn
-const authenticateToken = require('../middleware/authenticateToken'); // Import middleware xác thực
+const Product = require('../models/productModel');
+const authenticateToken = require('../middleware/authenticateToken'); // Middleware xác thực
 
-// Lấy tất cả sản phẩm, có hỗ trợ tìm kiếm theo từ khóa
+// Lấy tất cả sản phẩm (yêu cầu token)
 router.get('/all', authenticateToken, async (req, res) => {
   try {
     let query = {};
@@ -24,7 +24,7 @@ router.get('/all', authenticateToken, async (req, res) => {
   }
 });
 
-// Thêm sản phẩm mới
+// Thêm sản phẩm mới (yêu cầu token)
 router.post('/add', authenticateToken, async (req, res) => {
   try {
     const { name, price, category, description } = req.body;
@@ -43,7 +43,7 @@ router.post('/add', authenticateToken, async (req, res) => {
   }
 });
 
-// Cập nhật sản phẩm
+// Cập nhật sản phẩm (yêu cầu token)
 router.put('/update/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -60,7 +60,7 @@ router.put('/update/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Xóa sản phẩm
+// Xóa sản phẩm (yêu cầu token)
 router.delete('/delete/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
