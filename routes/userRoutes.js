@@ -6,50 +6,6 @@ const config = require("../ultil/tokenConfig");
 require('dotenv').config();
 const router = express.Router();
 
-// Middleware xác thực token
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ message: "Không có token, vui lòng đăng nhập!" });
-    }
-
-    JWT.verify(token, config.SECRETKEY, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: "Token không hợp lệ!" });
-        }
-        req.user = user; // Lưu thông tin user vào request
-        next();
-    });
-};
-
-
-router.post("/register", async (req, res) => {
-    try {
-        const { fullName, email, phoneNumber, password } = req.body;
-
-        // Kiểm tra nếu thiếu bất kỳ trường nào
-        if (!fullName || !email || !phoneNumber || !password) {
-            return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
-        }
-
-        // Kiểm tra xem email đã tồn tại chưa
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email đã được sử dụng!" });
-        }
-
-        // Tạo người dùng mới với đầy đủ thông tin
-        const newUser = new userModel({ fullName, email, phoneNumber, password });
-        await newUser.save();
-
-        res.status(201).json({ message: "Đăng ký thành công!" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-}); 
-
 // Đăng nhập và tạo token
 router.post("/login", async (req, res) => {
     try {
@@ -70,15 +26,41 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-// API lấy danh sách user (yêu cầu token)
-router.get("/all", authenticateToken, async (req, res) => {
+// Đăng ký người dùng mới (Không dùng bcrypt)
+router.post("/register", async (req, res) => {
     try {
-        const users = await userModel.find().select("-password"); // Không trả về mật khẩu
+        const { fullName, email, phoneNumber, password } = req.body;
+
+        // Kiểm tra email đã tồn tại chưa
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email đã tồn tại!" });
+        }
+
+        // Lưu người dùng vào database (Không mã hóa mật khẩu)
+        const newUser = new userModel({
+            fullName,
+            email,
+            phoneNumber,
+            password
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: "Đăng ký thành công!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Lấy danh sách người dùng
+router.get("/all", async (req, res) => {
+    try {
+        const users = await userModel.find().select('-password'); // Loại bỏ mật khẩu khi trả về danh sách
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 module.exports = router;
