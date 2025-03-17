@@ -24,33 +24,57 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+
+router.post("/register", async (req, res) => {
+    try {
+        const { fullName, email, phoneNumber, password } = req.body;
+
+        // Kiểm tra nếu thiếu bất kỳ trường nào
+        if (!fullName || !email || !phoneNumber || !password) {
+            return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
+        }
+
+        // Kiểm tra xem email đã tồn tại chưa
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email đã được sử dụng!" });
+        }
+
+        // Tạo người dùng mới với đầy đủ thông tin
+        const newUser = new userModel({ fullName, email, phoneNumber, password });
+        await newUser.save();
+
+        res.status(201).json({ message: "Đăng ký thành công!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}); 
+
 // Đăng nhập và tạo token
-router.post('/login', async function (req, res) {
+router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
-      
-        // Sử dụng `await` để lấy dữ liệu từ database
+
+        // Kiểm tra thông tin đăng nhập
         const user = await userModel.findOne({ email, password });
-        
         if (!user) {
             return res.status(400).json({ message: "Email hoặc mật khẩu không đúng!" });
         }
 
-        // Tạo token nếu đăng nhập thành công
-        const token = JWT.sign({ email: email }, config.SECRETKEY, { expiresIn: '30s' });
-        const refreshToken = JWT.sign({ email: email }, config.SECRETKEY, { expiresIn: '1d' });
+        // Tạo token đăng nhập
+        const token = jwt.sign({ email }, config.SECRETKEY, { expiresIn: "30s" });
+        const refreshToken = jwt.sign({ email }, config.SECRETKEY, { expiresIn: "1d" });
 
         res.json({ message: "Đăng nhập thành công!", token, refreshToken });
-
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
 // API lấy danh sách user (yêu cầu token)
-router.get('/users', authenticateToken, async (req, res) => {
+router.get("/users", authenticateToken, async (req, res) => {
     try {
-        const users = await userModel.find().select("-password");
+        const users = await userModel.find().select("-password"); // Không trả về mật khẩu
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
