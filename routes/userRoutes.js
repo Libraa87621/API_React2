@@ -72,7 +72,7 @@ router.post("/login", async (req, res) => {
 });
 
 // API lấy danh sách user (yêu cầu token)
-router.get("/users", authenticateToken, async (req, res) => {
+router.get("/all", authenticateToken, async (req, res) => {
     try {
         const users = await userModel.find().select("-password"); // Không trả về mật khẩu
         res.json(users);
