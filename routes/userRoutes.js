@@ -84,4 +84,28 @@ router.get("/all", authenticateToken, async (req, res) => {
     }
 });
 
+
+// Tìm kiếm người dùng theo tên
+router.get("/search", authenticateToken, async (req, res) => {
+    try {
+        const { name } = req.query;
+        
+        if (!name) {
+            return res.status(400).json({ message: "Vui lòng nhập tên cần tìm!" });
+        }
+
+        const users = await userModel.find({ 
+            fullName: { $regex: name, $options: "i" } // Tìm kiếm không phân biệt chữ hoa/thường
+        }).select('-password'); // Ẩn mật khẩu khi trả về
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng nào!" });
+        }
+
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;
